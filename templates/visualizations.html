@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+
+    <title>Statify</title>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+        google.charts.load("current", {packages:["corechart"]});
+        google.charts.setOnLoadCallback(drawPieChart);
+        function drawPieChart() {
+            var pieData = new google.visualization.DataTable();
+            pieData.addColumn('string', 'Genre');
+            pieData.addColumn('number', 'Count');
+            pieData.addRows([  
+                ['hip hop', 4],
+                ['alternative r&b', 8],
+                ['filter house', 3],
+                ['k-rap', 2],
+                ['lo-fi rap', 2],
+                ['other', 24],
+            ]);
+            var options = {
+                pieHole: 0.4,
+            };
+            var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+            chart.draw(pieData, options);
+        }
+    </script>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+        google.charts.load('current', {'packages':['scatter']});
+        google.charts.setOnLoadCallback(drawScatterChart);
+        function drawScatterChart() {
+            var scatterData = new google.visualization.DataTable();
+            scatterData.addColumn('number', 'Danceability');
+            scatterData.addColumn('number', 'Energy');
+            scatterData.addRows([
+                {% for k, v in dance_energy.items() %}
+                    [{{ v[0] }}, {{ v[1] }}],
+                {% endfor %}
+            ]);
+            var options = {
+                width: 800,
+                height: 500,
+                hAxis: {title: 'Danceability'},
+                vAxis: {title: 'Energy'}
+            };
+            var chart = new google.charts.Scatter(document.getElementById('scatterchart_material'));
+            chart.draw(scatterData, google.charts.Scatter.convertOptions(options));
+        }
+    </script>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('index') }}">Statify</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('visualizations') }}">Visualizations</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('about') }}">About</a>
+            </li>
+        </ul>
+        </div>
+    </div>
+    </nav>
+    <div class="container">
+        {% for message in get_flashed_messages() %}
+            <div class="alert">{{ message }}</div>
+        {% endfor %}
+        <div>
+            &nbsp;
+        </div>
+        <br>
+        <h1>What does your music taste <i>look</i> like?</h1>
+        <br>
+        <div>
+            <br>
+            <h2>Top Genre Breakdown</h2>
+            <h6>The most common styles in your top 50 songs are...<h6>
+            <div id="piechart" style="width: 1000px; height: 500px;"></div>
+        <br>
+        <h2>Average BPM: {{ ave_bpm }}</h2>
+        <h6>Your daily tempo sounds something like this...<h6>
+        <table id='bpm' class="display" width="50%" table-layout="fixed" cellpadding="15" border="0">
+            <tbody>
+                <tr>
+                    <td width="5%">
+                        <a href={{ closest_song['external_urls']['spotify'] }} target="_blank">
+                            <img src={{ closest_song['album']['images'][0]['url'] }} width="250" height="250">
+                        </a>
+                    </td>
+                    <td width="20%">
+                        <a href={{ closest_song['external_urls']['spotify'] }} target="_blank" style="color:#000000; text-decoration:none">
+                            <h4> {{ closest_song['name'] }} </h4>
+                        </a>
+                        <a href={{ closest_song['artists'][0]['external_urls']['spotify'] }} target="_blank" style="color:#000000; text-decoration:none">
+                            <h5> {{ closest_song['artists'][0]['name'] }} </h5>
+                        </a>
+                        <br>
+                        <h5>BPM: {{ closest_bpm }}</h5>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <br>
+        <h2>Danceability vs Energy</h2>
+        <h6>Do you like to <i>move it move it</i>? Based on your top 20 songs...<h6>
+        <br>
+        <div id="scatterchart_material" style="width: 1000px; height: 500px;"></div>
+        <br>
+        <br>
+        <h2>Popularity: {{ pop * 100 }}%</h2>
+        <h6>Your song choices are pretty unique...<h6>
+        <br>
+        <div>
+            <br>
+            <table id='popularity' class="display" width="100%" table-layout="fixed" border="0">
+            <tbody>
+                <tr>
+                    <td width="5%">
+                        <a href={{ most_pop['external_urls']['spotify'] }} target="_blank">
+                            <img src={{ most_pop['album']['images'][0]['url'] }} width="250" height="250">
+                        </a>
+                    </td>
+                    <td width="20%">
+                        <p><i> Your Most Popular Song </i></p>
+                        <br>
+                        <br>
+                        <a href={{ most_pop['external_urls']['spotify'] }} target="_blank" style="color:#000000; text-decoration:none">
+                            <h4> {{ most_pop['name'] }} </h4>
+                        </a>
+                        <a href={{ most_pop['artists'][0]['external_urls']['spotify'] }} target="_blank" style="color:#000000; text-decoration:none">
+                            <h5> {{ most_pop['artists'][0]['name'] }} </h5>
+                        </a>
+                        <br>
+                        <h5>Popularity: {{ most_val }} / 100</h5>
+                    </td>
+                    <td width="5%">
+                        <a href={{ least_pop['external_urls']['spotify'] }} target="_blank">
+                            <img src={{ least_pop['album']['images'][0]['url'] }} width="250" height="250">
+                        </a>
+                    </td>
+                    <td width="20%">
+                        <p><i> Your Most Obscure Song </i></p>
+                        <br>
+                        <br>
+                        <a href={{ least_pop['external_urls']['spotify'] }} target="_blank" style="color:#000000; text-decoration:none">
+                            <h4> {{ least_pop['name'] }} </h4>
+                        </a>
+                        <a href={{ least_pop['artists'][0]['external_urls']['spotify'] }} target="_blank" style="color:#000000; text-decoration:none">
+                            <h5> {{ least_pop['artists'][0]['name'] }} </h5>
+                        </a>
+                        <br>
+                        <h5>Popularity: {{ least_val }} / 100</h5>
+                    </td>
+                </tr>
+            </tbody>
+        </table>  
+        </div>
+    </div>
+
+    <!-- Optional JavaScript -->
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-U1DAWAznBHeqEIlVSCgzq+c9gqGAJn5c/t99JyeKa9xxaYpSvHU5awsuZVVFIhvj" crossorigin="anonymous"></script>
+
+  </body>
+</html>
